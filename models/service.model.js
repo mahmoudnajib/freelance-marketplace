@@ -1,32 +1,36 @@
 const mongoose = require('mongoose');
+const constants = require('../utils/constants');
 
 const serviceSchema = new mongoose.Schema({
+    title : {
+        type : String,
+        required : true,
+        trim: true
+    },
     category : {
         type: String,
         required : true,
         trim: true,
-        enum : ["Web Developement", "Mobile Application", "Cloud Computing", "Web Security", 
-            "Graphic Design", "Video Editing"],
-    },
-    title : {
-        type : String,
-        required : true,
-        trim: true,
+        enum : constants.CATEGORIES
     },
     description : {
         type : String,
         required : true,
-        trim: true, 
+        trim: true 
     },
     seller : {
         type : mongoose.Schema.ObjectId,
         required : true,
-        ref : 'User', 
+        ref : 'User' 
     },
     price : {
         type : Number,
         min : [0, "Price cannot be negative"],
         required : true,
+        validate: {
+            validator: Number.isInteger,
+            message: "{VALUE} is not an integer value"
+        }
     }
 }); 
 
