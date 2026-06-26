@@ -6,38 +6,37 @@ const appError = require('../middlewares/appError');
 const asyncWrapper = require('../utils/asyncWrapper');
 
 
-
-const getUsers = asyncWrapper (async (req, res, next)=>{
-    const users = await User.find({}, {_id: 0, __v: 0, password: 0}); 
-    res.json({status: statusText.SUCCESS, data: {users}});
-});
-
 const register = asyncWrapper (async (req, res, next)=>{
-    const {firstName, lastName, age, email: clientEmail, password: clientPassword, role, avatar} = req.body;
+    const {firstName, lastName, age, email, password, role, avatar} = req.body;
     
-    const oldUser = await User.findOne({email: clientEmail});
+    const oldUser = await User.findOne({email});
     if (oldUser){
         const error  = new appError("User is alreay registered", 400, statusText.FAIL);
         return next(error);
     }
 
-    const hashedPassword = await bcrypt.hash(clientPassword, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
         firstName, 
         lastName, 
         age, 
-        email: clientEmail, 
+        email,
         password: hashedPassword,
         role,
         avatar
     });
+    await newUser.save();
+
+    const userResponse = newUser.toObject();
+        delete userResponse.password;
+        delete userResponse.__v;
 
     const token = jwt.generateToken({id: newUser._id, email: newUser.email, role: newUser.role});
 
-    await newUser.save();
-    res.status(201).json({status: statusText.SUCCESS, data: {user: newUser, token: token} });    
+    res.json({status: statusText.SUCCESS, data: {user: userResponse, token: token} });    
 });
+
 
 const login = asyncWrapper (async (req, res, next)=>{
 
@@ -65,8 +64,27 @@ const login = asyncWrapper (async (req, res, next)=>{
     }
 });
 
+const getUsers = asyncWrapper (async (req, res, next)=>{
+    const users = await User.find({}, {__v: 0, password: 0}); 
+    res.json({status: statusText.SUCCESS, data: {users}});
+});
+
+const getUser = asyncWrapper (async (req, res, next)=>{
+
+    const userId = req.params.id;
+
+    const user = await User.findById(userId, {__v: 0, password: 0});
+    if (!user){
+        const error = new appError("User not found", 404, statusText.FAIL);
+        return next(error);
+    }
+
+    res.json({status: statusText.SUCCESS, data: {user} });
+});
+
 module.exports = {
-    getUsers,    
     register,
-    login
+    login,
+    getUsers,
+    getUser    
 };

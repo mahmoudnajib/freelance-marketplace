@@ -7,12 +7,10 @@ const {verifyToken, allowedTo} = require('../middlewares/verifyToken');
 router.route('/')
     .get(verifyToken, allowedTo('admin', 'buyer', 'seller'), orderController.getOrders);
 
-router.route('/create/:id')    
-    .post(verifyToken, allowedTo('buyer'), orderController.createOrder);
-
 router.route('/:id')
-    .patch(verifyToken, allowedTo('admin', 'buyer', 'seller'), orderController.updateOrder)
     .get(verifyToken, allowedTo('admin', 'buyer', 'seller'), orderController.getOrder)
+    .post(verifyToken, allowedTo('buyer'), orderController.createOrder)
+    .patch(verifyToken, allowedTo('buyer', 'seller'), orderController.updateOrder)
     .delete(verifyToken, allowedTo('admin', 'buyer', 'seller'), orderController.deleteOrder);
 
 module.exports = router;

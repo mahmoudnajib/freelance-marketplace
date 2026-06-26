@@ -2,9 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const url = process.env.DATABASE_URL;
 const port = process.env.PORT || 4000;
+
+const statusText = require('./utils/statusText');
+const appError = require('./middlewares/appError');
+
 
 mongoose.connect(url)
     .then(()=>{
@@ -16,6 +21,9 @@ mongoose.connect(url)
 
 app.use(express.json());
 
+app.use(cors());
+
+
 const usersRoutes = require('./routes/user.routes');
 app.use('/api/users', usersRoutes);
 
@@ -24,6 +32,31 @@ app.use('/api/services', serviceRoutes);
 
 const orderRoutes = require('./routes/order.routes');
 app.use('/api/orders', orderRoutes);
+
+const reviewRoutes = require('./routes/review.routes');
+app.use('/api/reviews', reviewRoutes);
+
+
+app.use((req, res, next) =>{
+
+    const error = new appError(`Can't find ${req.originalUrl} on this server`, 404, statusText.FAIL);
+    return next(error);
+});
+
+
+// global error handler
+app.use((error, req, res, next)=>{ 
+
+    const statusCode = error.statusCode || 500;
+    const status = error.statusText || statusText.ERROR;
+
+    res.status(statusCode).json({
+        status,
+        data: null,
+        message: error.message || "Internal Server Error"
+    });
+});
+
 
 app.listen(port, ()=>{
     console.log(`listening on port ${port}`);

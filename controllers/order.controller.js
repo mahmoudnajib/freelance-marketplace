@@ -44,6 +44,7 @@ const createOrder = asyncWrapper ( async (req, res, next)=>{
 });
 
 const getOrders = asyncWrapper(async (req, res, next) => {
+
     const userId = req.userData.id;
     const userRole = req.userData.role;
 
@@ -144,6 +145,7 @@ const updateOrder = asyncWrapper (async (req, res, next)=>{
 });
 
 const deleteOrder = asyncWrapper (async (req, res, next)=>{
+
     const orderId = req.params.id;
     const userId = req.userData.id;
 
@@ -165,6 +167,7 @@ const deleteOrder = asyncWrapper (async (req, res, next)=>{
         const error = new appError("deleting this order now is not allowed", 403, statusText.FAIL);
         return next(error);
     }
+
 });
 
 module.exports = {

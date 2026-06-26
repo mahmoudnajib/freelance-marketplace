@@ -34,6 +34,6 @@ const mongoose = require("mongoose");
         type: String,
         default: "/uploads/picture.jpg",
     }
-})
+});
 
 module.exports = mongoose.model("User", userSchema);

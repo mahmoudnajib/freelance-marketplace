@@ -22,7 +22,7 @@ const createService = asyncWrapper (async (req, res, next)=>{
             seller: sellerId
         });
         await newService.save();
-        res.status(201).json({status: statusText.SUCCESS, data: {service: newService} });    
+        res.json({status: statusText.SUCCESS, data: {service: newService} });    
 });
 
 const getService = asyncWrapper (async (req, res, next)=>{
@@ -35,7 +35,7 @@ const getService = asyncWrapper (async (req, res, next)=>{
             const error = new appError("Service not found", 404, statusText.FAIL);
             return next(error);
         }
-        res.json({status: statusText.SUCCESS, data: targetService});
+        res.json({status: statusText.SUCCESS, data: {targetService} });
 });
 
 const updateService = asyncWrapper (async (req, res, next)=>{
@@ -54,7 +54,7 @@ const updateService = asyncWrapper (async (req, res, next)=>{
                 req.body,
                 { new: true, runValidators: true }
             );
-            return res.json({status: statusText.SUCCESS, data: updatedService});
+            return res.json({status: statusText.SUCCESS, data: {updatedService} });
         } else {
             const error = new appError("Not permitted", 403, statusText.FAIL);
             return next(error);
@@ -72,7 +72,7 @@ const deleteService = asyncWrapper (async (req, res, next)=>{
 
         if (targetService.seller.toString() === req.userData.id || req.userData.role === 'admin'){
             await Service.findByIdAndDelete(serviceId); 
-            return res.json({status: statusText.SUCCESS, data: targetService});
+            return res.json({status: statusText.SUCCESS, data: {targetService} });
         } else {
             const error = new appError("Not permitted", 403, statusText.FAIL);
             return next(error);
