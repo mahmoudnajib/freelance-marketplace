@@ -1,3 +1,6 @@
+const appError = require('../utils/appError');
+const statusText = require('../utils/statusText');
+
 const multer = require('multer');
 
 const storage = multer.diskStorage({
@@ -6,7 +9,7 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const ext = file.mimetype.split('/')[1];
-        const uniqueSuffix = `${req.currentUser?.id || 'avatar'}-${Date.now()}.${ext}`;
+        const uniqueSuffix = `${req.userData?.id || 'avatar'}-${Date.now()}.${ext}`;
         cb(null, uniqueSuffix);
     }
 });
@@ -17,7 +20,7 @@ const fileFilter = (req, file, cb) => {
     if (imageType === 'image') {
         cb(null, true);
     } else {
-        cb(new Error('The file must be an image', 400), false);
+        cb(new appError('The file must be an image', 400, statusText.FAIL), false);
     }
 };
 
