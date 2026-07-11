@@ -32,7 +32,22 @@ const mongoose = require("mongoose");
     },
     avatar : {
         type: String,
-        default: "/uploads/picture.jpg",
+        default: null,
+    },
+    balance: {
+        type: Number,
+        default: 0,
+        min: [0, "Balance cannot be negative"]
+    },
+    frozenBalance: {
+        type: Number,
+        default: 0,
+        min: [0, "Frozen Balance cannot be negative"]
+    },
+    withdrawalAccount: {
+        type: String,
+        default: null,
+        trim: true
     }
 });
 

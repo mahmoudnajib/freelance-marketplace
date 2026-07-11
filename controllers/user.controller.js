@@ -2,7 +2,7 @@ const User = require('../models/user.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('../utils/generateToken');
 const statusText = require('../utils/statusText');
-const appError = require('../middlewares/appError');
+const appError = require('../utils/appError');
 const asyncWrapper = require('../utils/asyncWrapper');
 
 
@@ -37,7 +37,6 @@ const register = asyncWrapper (async (req, res, next)=>{
     res.json({status: statusText.SUCCESS, data: {user: userResponse, token: token} });    
 });
 
-
 const login = asyncWrapper (async (req, res, next)=>{
 
     const {email: clientEmail, password: clientPassword} = req.body;
@@ -56,7 +55,12 @@ const login = asyncWrapper (async (req, res, next)=>{
 
     if (user && matchedPassword){
         const token = jwt.generateToken({id: user._id, email: user.email, role: user.role});
-        res.json({status: statusText.SUCCESS, data: {user, token} });    
+    
+        const userResponse = user.toObject();
+        delete userResponse.password;
+        delete userResponse.__v;
+        
+        res.json({status: statusText.SUCCESS, data: {user: userResponse, token} });    
     }
     else {
         const error = new appError("check email or password again", 400, statusText.FAIL);
@@ -64,10 +68,59 @@ const login = asyncWrapper (async (req, res, next)=>{
     }
 });
 
-const getUsers = asyncWrapper (async (req, res, next)=>{
-    const users = await User.find({}, {__v: 0, password: 0}); 
-    res.json({status: statusText.SUCCESS, data: {users}});
+const updateUser = asyncWrapper(async(req, res, next)=>{
+    const {firstName, lastName, age, email, password, withdrawalAccount} = req.body
+    const userId = req.userData.id;
+    
+    let hashedPassword;
+    if(password) {
+        hashedPassword = await bcrypt.hash(password, 10);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, {
+        firstName, 
+        lastName, 
+        age, 
+        email,
+        password: hashedPassword,
+        withdrawalAccount
+    },
+    { new: true, runValidators: true }).select("-password -__v");
+
+    res.json({status: statusText.SUCCESS, data: {updatedUser}});
 });
+
+const getUsers = asyncWrapper(async (req, res, next) => {
+
+    const page = +req.query.page || 1;
+    const limit = +req.query.limit || 10;
+    const sanitizedPage = Math.max(page, 1); 
+    const sanitizedLimit = Math.max(limit, 1);
+    const skip = (sanitizedPage - 1) * sanitizedLimit;
+
+    const [users, totalUsers] = await Promise.all([
+        User.find({}, { __v: 0, password: 0})
+            .limit(sanitizedLimit)
+            .skip(skip),
+            User.countDocuments()
+    ]);
+
+    const totalPages = Math.ceil(totalUsers / sanitizedLimit);
+
+    res.json({
+        status: statusText.SUCCESS,
+        data: {
+            meta: {
+                totalItems: totalUsers,
+                totalPages: totalPages,
+                currentPage: sanitizedPage,
+                limit: sanitizedLimit
+            },
+            users
+        }
+    });
+});
+
 
 const getUser = asyncWrapper (async (req, res, next)=>{
 
@@ -80,11 +133,38 @@ const getUser = asyncWrapper (async (req, res, next)=>{
     }
 
     res.json({status: statusText.SUCCESS, data: {user} });
+
+});
+
+const updateAvatar = asyncWrapper (async (req, res, next)=>{
+    
+    if (!req.file){
+        const error = new appError('Please upload an image', 400, statusText.FAIL);
+        return next(error);
+    }
+
+    const avatarName = req.file.filename;
+
+    const updatedUser = await User.findByIdAndUpdate(
+        req.userData.id,
+        {avatar: avatarName },
+        {new: true }
+    );
+
+    res.json({
+        status: statusText.SUCCESS, data: {avatar: updatedUser.avatar}
+    });
 });
 
 module.exports = {
     register,
     login,
     getUsers,
-    getUser    
+    getUser,
+    updateUser,
+    updateAvatar
 };
+
+
+// TODO: send welcome email
+// TODO: إرسال كود تأكيد للإيميل الجديد قبل الحفظ في الداتابيز

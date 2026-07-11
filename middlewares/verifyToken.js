@@ -1,10 +1,14 @@
 const jwt = require('jsonwebtoken');
 const token = require('../utils/generateToken');
+const appError = require('../utils/appError');
+const statusText = require('../utils/statusText');
+
 
 const verifyToken = (req, res, next)=>{
     const authorizationValue = req.headers['Authorization'] || req.headers['authorization'];
     if(!authorizationValue){
-        return res.status(401).json({status: "fail", message: "Token required"});
+        const error = new appError("Token required", 401, statusText.FAIL);
+        return next(error);
     }
     
     const token = authorizationValue.split(' ')[1];
@@ -13,14 +17,16 @@ const verifyToken = (req, res, next)=>{
         req.userData = payload;
         next();
     } catch (err){
-        return res.status(401).json({status: "fail", message: "invalid or expired token"});
+        const error = new appError("invalid or expired token", 401, statusText.FAIL);
+        return next(error);
     }
 };
 
 const allowedTo = (...roles)=>{
     return (req, res, next)=>{
         if(!roles.includes(req.userData.role)){
-            return res.status(403).json({status: "fail", message: "Role not authorized"});
+            const error = new appError("Role not authorized", 403, statusText.FAIL);
+            return next(error);
         }
         next();
     }

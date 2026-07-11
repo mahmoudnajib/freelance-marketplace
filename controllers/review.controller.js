@@ -1,14 +1,14 @@
 const Review = require('../models/review.model');
 const Order = require('../models/order.model');
 const statusText = require('../utils/statusText');
-const appError = require('../middlewares/appError');
+const appError = require('../utils/appError');
 const asyncWrapper = require('../utils/asyncWrapper');
 
 const createReview = asyncWrapper (async (req, res, next)=>{
     
     const buyerId = req.userData.id;
 
-    const {seller, service, order, comment, rating} = req.body;
+    const {order, comment, rating} = req.body;
     
     const targetOrder = await Order.findById(order);
     
@@ -24,19 +24,26 @@ const createReview = asyncWrapper (async (req, res, next)=>{
 
     const newReview = new Review({
         buyer: buyerId,
-        seller, 
-        service, 
+        seller: targetOrder.seller, 
+        service: targetOrder.service, 
         order, 
         comment, 
         rating
     });
     await newReview.save();
 
-    res.status(201).json({status: statusText.SUCCESS, data: {newReview} });
+    res.json({status: statusText.SUCCESS, data: {newReview} });
 });
 
 
 const getReviews = asyncWrapper (async (req, res, next)=>{
+
+    const page = +req.query.page || 1;
+    const limit = +req.query.limit || 10;
+
+    const sanitizedPage = Math.max(page, 1); 
+    const sanitizedLimit = Math.max(limit, 1);
+    const skip = (pages - 1) * limitNumber;
 
     const {serviceId, sellerId} = req.query;
 
@@ -47,14 +54,30 @@ const getReviews = asyncWrapper (async (req, res, next)=>{
     if(sellerId)
         filter.seller = sellerId;
 
-    const reviews = await Review.find(filter, {__v: 0})
-            .populate('seller', 'firstName lastName avatar')
-            .populate('buyer', 'firstName lastName avatar')
-            .populate('service', 'title price')  
+    const [reviews, totalReviews] = await Promise.all([
+        Review.find(filter, {__v: 0})
+        .limit(sanitizedLimit)
+        .skip(sanitizedPage)
+        .populate('seller', 'firstName lastName avatar')
+        .populate('buyer', 'firstName lastName avatar')
+        .populate('service', 'title price'),
+        Review.countDocuments(filter)
+    ]);  
             
-    res.json({status: statusText.SUCCESS, data: {reviews}});
+    const totalPages = Math.ceil(totalReviews / sanitizedLimit);
 
-
+    res.json({
+        status: statusText.SUCCESS,
+        data: {     
+            meta: {
+                totalItems: totalReviews,
+                totalPages: totalPages,
+                currentPage: sanitizedPage,
+                limit: sanitizedLimit
+            },
+            reviews
+        }
+    });
 });
 
 

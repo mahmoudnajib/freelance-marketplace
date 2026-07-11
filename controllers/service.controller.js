@@ -1,13 +1,56 @@
 /** @type {import('mongoose').Model<any>} */
 const Service = require('../models/service.model');
 const statusText = require('../utils/statusText');
-const appError = require('../middlewares/appError');
+const appError = require('../utils/appError');
 const asyncWrapper = require('../utils/asyncWrapper');
 
-const getServices = asyncWrapper (async (req, res, next)=>{
-        const services = await Service.find({}, {__v: 0})
-            .populate('seller', 'firstName lastName email avatar');
-        res.json({status: statusText.SUCCESS, data: {services}});  
+
+const getServices = asyncWrapper(async (req, res, next) => {
+    
+    const filter = {};
+    const {search, category, sortByPrice} = req.query;
+    if (search) 
+        filter.title = {$regex: search, $options: 'i'};
+    
+    if (category) 
+        filter.category = req.query.category;
+
+    const sortOption = {};
+    if (sortByPrice === 'low to high')
+        sortOption.price = 1;
+    else if (sortByPrice === 'high to low')
+        sortOption.price = -1;
+
+    const page = +req.query.page || 1;
+    const limit = +req.query.limit || 10;
+    const sanitizedPage = Math.max(page, 1); 
+    const sanitizedLimit = Math.max(limit, 1);
+    const skip = (sanitizedPage - 1) * sanitizedLimit;
+
+    const [services, totalServices] = await Promise.all([
+        Service.find(filter, { __v: 0 })
+            .sort(sortOption)
+            .limit(sanitizedLimit)
+            .skip(skip)
+            .populate('seller', 'firstName lastName email avatar'),
+
+            Service.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(totalServices / sanitizedLimit);
+
+    res.json({
+        status: statusText.SUCCESS,
+        data: {     
+            meta: {
+                totalItems: totalServices,
+                totalPages: totalPages,
+                currentPage: sanitizedPage,
+                limit: sanitizedLimit
+            },
+            services
+        }
+    });
 });
 
 const createService = asyncWrapper (async (req, res, next)=>{
@@ -51,7 +94,7 @@ const updateService = asyncWrapper (async (req, res, next)=>{
         if (targetService.seller.toString() === req.userData.id || req.userData.role === 'admin'){
             const updatedService = await Service.findByIdAndUpdate(
                 serviceId, 
-                req.body,
+                {title, description, price, category},
                 { new: true, runValidators: true }
             );
             return res.json({status: statusText.SUCCESS, data: {updatedService} });

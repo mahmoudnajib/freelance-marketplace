@@ -2,12 +2,12 @@ const Order = require('../models/order.model');
 const Service = require('../models/service.model');
 const asyncWrapper = require('../utils/asyncWrapper');
 const statusText = require('../utils/statusText');
-const appError = require('../middlewares/appError');
-
+const appError = require('../utils/appError');
+const paymentService = require("../services/wallet.service"); 
 
 const createOrder = asyncWrapper ( async (req, res, next)=>{
 
-    const serviceId = req.params.id;
+    const serviceId = req.body.service;
     const service = await Service.findById(serviceId); 
     
     if (!service){
@@ -28,7 +28,9 @@ const createOrder = asyncWrapper ( async (req, res, next)=>{
         const error = new appError("something went wrong", 400, statusText.FAIL);
         return next(error);
     }
-    
+
+    await paymentService.freezeFunds(buyerId, service.price);
+
     const orderNumber = `ORD-${Date.now()}`;
     const newOrder = new Order({
         orderNumber,
@@ -44,33 +46,51 @@ const createOrder = asyncWrapper ( async (req, res, next)=>{
 });
 
 const getOrders = asyncWrapper(async (req, res, next) => {
-
     const userId = req.userData.id;
     const userRole = req.userData.role;
 
-    if (userRole === 'admin') {
-        const orders = await Order.find({}) 
-            .populate('service', 'title price') 
-            .populate('buyer', 'firstName lastName') 
-            .populate('seller', 'firstName lastName');
+    const page = +req.query.page || 1;
+    const limit = +req.query.limit || 10;
+    const sanitizedPage = Math.max(page, 1); 
+    const sanitizedLimit = Math.max(limit, 1);
+    const skip = (sanitizedPage - 1) * sanitizedLimit;
 
-        return res.json({status: statusText.SUCCESS, data: {orders}});
-    } 
-    
-    else {
-        const orders = await Order.find({
+    let filter = {};
+    if (userRole !== 'admin') {
+        filter = {
             $or: [
                 { buyer: userId },
                 { seller: userId }
             ]
-        })
-        .populate('service', 'title price') 
-        .populate('buyer', 'firstName lastName') 
-        .populate('seller', 'firstName lastName');
-
-        return res.json({ status: statusText.SUCCESS, data: { orders } });
+        };
     }
+
+    const [orders, totalOrders] = await Promise.all([
+        Order.find(filter)
+            .limit(sanitizedLimit)
+            .skip(skip)
+            .populate('service', 'title price') 
+            .populate('buyer', 'firstName lastName') 
+            .populate('seller', 'firstName lastName'),
+        Order.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(totalOrders / sanitizedLimit);
+
+    res.json({
+        status: statusText.SUCCESS, 
+        data: {
+            meta: {
+                totalItems: totalOrders,
+                totalPages: totalPages,
+                currentPage: sanitizedPage,
+                limit: sanitizedLimit
+            },
+            orders
+        }
+    });
 });
+
 
 const getOrder = asyncWrapper (async (req, res, next) =>{
 
@@ -113,25 +133,42 @@ const updateOrder = asyncWrapper (async (req, res, next)=>{
         return next(error);
     }
 
+    
     if (orderStatus === "completed") {
         if (userId !== order.buyer.toString()) {
             const error = new appError("Only the buyer can complete this order", 403, statusText.FAIL);
             return next(error);
         }
+        if (order.status !== "in progress") {
+            const error = new appError("Order must be 'in progress' before it can be completed", 400, statusText.FAIL);
+            return next(error);
+        }
+
+        await paymentService.releaseFunds(order.buyer, order.seller, order.price);
     }
     
     else if (orderStatus === "in progress") {
         if (userId !== order.seller.toString()) {
-            const error = new appError("Only the seller can start this order", 403, statusText.FAIL);
+            const error = new appError("Only the seller can work on this order", 403, statusText.FAIL);
+            return next(error);
+        }
+        if (order.status !== "pending") {
+            const error = new appError("Order must be 'pending' before it can be started", 400, statusText.FAIL);
             return next(error);
         }
     }
 
     else if (orderStatus === "cancelled") {
-        if (userId !== order.buyer.toString() && userId !== order.seller.toString()) {
+        if (userId !== order.buyer.toString() && userId !== order.seller.toString() && userRole !== 'admin') {
             const error = new appError("You are not authorized to cancel this order", 403, statusText.FAIL);
             return next(error);
         }
+        if (order.status === "completed") {
+            const error = new appError("Cannot cancel an already completed order", 400, statusText.FAIL);
+            return next(error);
+        }
+
+        await paymentService.refundFunds(order.buyer, order.price);
     }
 
     const updatedOrder = await Order.findByIdAndUpdate(
@@ -148,6 +185,7 @@ const deleteOrder = asyncWrapper (async (req, res, next)=>{
 
     const orderId = req.params.id;
     const userId = req.userData.id;
+    const userRole = req.userData.role;
 
     const order = await Order.findById(orderId)
     if (!order){
@@ -155,7 +193,7 @@ const deleteOrder = asyncWrapper (async (req, res, next)=>{
         return next(error);
     }
 
-    if (userId !== order.buyer.toString() && userId !== order.seller.toString()){
+    if (userId !== order.buyer.toString() && userId !== order.seller.toString() && userRole !== 'admin'){
         const error = new appError("You are not authorized to delete this order", 403, statusText.FAIL);
         return next(error);
     }

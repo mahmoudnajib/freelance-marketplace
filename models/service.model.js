@@ -27,10 +27,18 @@ const serviceSchema = new mongoose.Schema({
         type : Number,
         min : [0, "Price cannot be negative"],
         required : true,
-        validate: {
+        validate: { // more defense 
             validator: Number.isInteger,
             message: "{VALUE} is not an integer value"
         }
+    },
+    averageRating : {
+        type: Number,
+        default: 0
+    },
+    ratingsQuantity: {
+        type: Number,
+        default: 0
     }
 }); 
 

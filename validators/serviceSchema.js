@@ -9,9 +9,8 @@ const serviceSchema = joi.object({
 });
 
 
-module.exports = {
-    serviceSchema
-};
+module.exports = serviceSchema;
+
 
 
 
