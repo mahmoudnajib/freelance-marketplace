@@ -129,6 +129,7 @@ const getMe = asyncWrapper(async(req, res, next)=>{
     }
 
     res.json({status: statusText.SUCCESS, data: {user} });
+
 });
 
 const updateUser = asyncWrapper(async(req, res, next)=>{

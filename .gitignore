@@ -9,8 +9,9 @@ jspm_packages/
 .env.test.local
 .env.production.local
 
-# Uploaded assets (Don't production-push local test images)
-uploads/
+# Uploaded assets (Ignore user uploads but keep default assets)
+uploads/*
+!uploads/default-avatar.jpeg
 
 # Debug logs
 npm-debug.log*

@@ -50,13 +50,20 @@ app.get('/', (req, res) => {
 });
 
 
+const swaggerUi = require('swagger-ui-express');
+const fs = require('fs');
+const yaml = require('yaml');
+
+const swaggerFileRaw = fs.readFileSync(path.join(__dirname, 'swagger.json'), 'utf8');
+const swaggerDocument = yaml.parse(swaggerFileRaw);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 
 app.use((req, res, next) =>{
-
     const error = new appError(`Can't find ${req.originalUrl} on this server`, 404, statusText.FAIL);
     return next(error);
 });
-
 
 // global error handler
 app.use((error, req, res, next)=>{ 
