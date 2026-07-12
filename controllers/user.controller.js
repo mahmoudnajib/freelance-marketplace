@@ -7,7 +7,8 @@ const asyncWrapper = require('../utils/asyncWrapper');
 
 
 const register = asyncWrapper (async (req, res, next)=>{
-    const {firstName, lastName, age, email, password, role, avatar} = req.body;
+
+    const {firstName, lastName, age, email, password, role, adminKey} = req.body;
     
     const oldUser = await User.findOne({email});
     if (oldUser){
@@ -17,14 +18,18 @@ const register = asyncWrapper (async (req, res, next)=>{
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    if (role === 'admin' && (!adminKey || adminKey !== process.env.ADMIN_SECRET_KEY) ){
+        const error = new appError("Invalid, could not register as an Admin", 403, statusText.FAIL);
+        return next(error);
+    }
+
     const newUser = new User({
         firstName, 
         lastName, 
         age, 
         email,
         password: hashedPassword,
-        role,
-        avatar
+        role
     });
     await newUser.save();
 
@@ -68,28 +73,6 @@ const login = asyncWrapper (async (req, res, next)=>{
     }
 });
 
-const updateUser = asyncWrapper(async(req, res, next)=>{
-    const {firstName, lastName, age, email, password, withdrawalAccount} = req.body
-    const userId = req.userData.id;
-    
-    let hashedPassword;
-    if(password) {
-        hashedPassword = await bcrypt.hash(password, 10);
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(userId, {
-        firstName, 
-        lastName, 
-        age, 
-        email,
-        password: hashedPassword,
-        withdrawalAccount
-    },
-    { new: true, runValidators: true }).select("-password -__v");
-
-    res.json({status: statusText.SUCCESS, data: {updatedUser}});
-});
-
 const getUsers = asyncWrapper(async (req, res, next) => {
 
     const page = +req.query.page || 1;
@@ -121,7 +104,6 @@ const getUsers = asyncWrapper(async (req, res, next) => {
     });
 });
 
-
 const getUser = asyncWrapper (async (req, res, next)=>{
 
     const userId = req.params.id;
@@ -136,33 +118,63 @@ const getUser = asyncWrapper (async (req, res, next)=>{
 
 });
 
-const updateAvatar = asyncWrapper (async (req, res, next)=>{
-    
-    if (!req.file){
-        const error = new appError('Please upload an image', 400, statusText.FAIL);
+const getMe = asyncWrapper(async(req, res, next)=>{
+
+    const userId = req.userData.id;
+    const user = await User.findById(userId).select("-password -__v");
+
+    if (!user){
+        const error = new appError("User not found", 404, statusText.FAIL);
         return next(error);
     }
 
-    const avatarName = req.file.filename;
-
-    const updatedUser = await User.findByIdAndUpdate(
-        req.userData.id,
-        {avatar: avatarName },
-        {new: true }
-    );
-
-    res.json({
-        status: statusText.SUCCESS, data: {avatar: updatedUser.avatar}
-    });
+    res.json({status: statusText.SUCCESS, data: {user} });
 });
+
+const updateUser = asyncWrapper(async(req, res, next)=>{
+    const {firstName, lastName, age, email, password, withdrawalAccount} = req.body
+    const userId = req.userData.id;
+
+    const currentUser = await User.findById(userId);
+
+    let hashedPassword;
+    if(password) {
+        hashedPassword = await bcrypt.hash(password, 10);
+    } else {        
+        hashedPassword = currentUser.password;
+    }
+
+    let avatarName;
+    if (req.file){
+        avatarName = req.file.filename;    
+    } else {
+        
+        avatarName = currentUser.avatar;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, {
+        firstName, 
+        lastName, 
+        age, 
+        email,
+        password: hashedPassword,
+        avatar: avatarName,
+        withdrawalAccount
+    },
+    { new: true, runValidators: true }).select("-password -__v");
+
+    res.json({status: statusText.SUCCESS, data: {updatedUser}});
+});
+
+
 
 module.exports = {
     register,
     login,
     getUsers,
     getUser,
-    updateUser,
-    updateAvatar
+    getMe,
+    updateUser
 };
 
 

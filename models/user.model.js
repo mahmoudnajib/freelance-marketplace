@@ -32,7 +32,7 @@ const mongoose = require("mongoose");
     },
     avatar : {
         type: String,
-        default: null,
+        default: '../uploads/default-avatar.jpeg',
     },
     balance: {
         type: Number,
