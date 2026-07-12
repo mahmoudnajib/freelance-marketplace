@@ -83,6 +83,7 @@ const getService = asyncWrapper (async (req, res, next)=>{
 
 const updateService = asyncWrapper (async (req, res, next)=>{
 
+    const {title, description, price, category} = req.body;
     const serviceId = req.params.id;
 
         const targetService = await Service.findById(serviceId);
