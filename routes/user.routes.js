@@ -11,15 +11,15 @@ const {registerSchema, loginSchema, updateUserSchema} = require('../validators/u
 router.route('/register').post(validator(registerSchema), userController.register);
 router.route('/login').post(validator(loginSchema), userController.login);
 
-router.route('/update-profile').patch(verifyToken, validator(updateUserSchema), userController.updateUser)
+router.use(verifyToken);
 
-router.route('/update-avatar').patch(verifyToken, upload.single('avatar'), userController.updateAvatar);
+router.route('/my-profile').get(userController.getMe);
+router.route('/update-profile').patch(upload.single('avatar'), validator(updateUserSchema), userController.updateUser)
 
-router.route('/')
-    .get(verifyToken, allowedTo('admin'), userController.getUsers);
 
-router.route('/:id')
-    .get(userController.getUser);
+router.route('/').get(allowedTo('admin'), userController.getUsers);
+
+router.route('/:id').get(userController.getUser);
 
 
 module.exports = router;
