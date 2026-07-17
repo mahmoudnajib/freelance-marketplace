@@ -44,15 +44,6 @@ const reviewRoutes = require('./routes/review.routes');
 app.use('/api/reviews', reviewRoutes);
 
 
-
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'view', 'index.html'));
-});
-
-
-
-
 const swaggerUi = require('swagger-ui-express');
 const fs = require('fs');
 const yaml = require('yaml');
