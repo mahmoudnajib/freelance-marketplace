@@ -29,8 +29,6 @@ const createOrder = asyncWrapper ( async (req, res, next)=>{
         return next(error);
     }
 
-    await paymentService.freezeFunds(buyerId, service.price);
-
     const orderNumber = `ORD-${Date.now()}`;
     const newOrder = new Order({
         orderNumber,
@@ -40,10 +38,14 @@ const createOrder = asyncWrapper ( async (req, res, next)=>{
         price: service.price,    
     });
 
+    // تم تعديل التكرار: استدعاء التجميد مرة واحدة فقط وتمرير الـ ID الجديد للـ Transaction ربطاً بالطلب
+    await paymentService.freezeFunds(buyerId, service.price, newOrder._id);
     await newOrder.save();
 
     res.status(201).json({status: statusText.SUCCESS, data: {newOrder} }); 
+
 });
+
 
 const getOrders = asyncWrapper(async (req, res, next) => {
     const userId = req.userData.id;
@@ -104,7 +106,7 @@ const getOrder = asyncWrapper (async (req, res, next) =>{
         .populate('buyer', 'firstName lastName') 
         .populate('seller', 'firstName lastName');
     
-        if (!order){
+    if (!order){
         const error = new appError("Order not found", 404, statusText.FAIL);
         return next(error);
     }
@@ -118,6 +120,7 @@ const getOrder = asyncWrapper (async (req, res, next) =>{
         return next(error);
     }
 });
+
 
 const updateOrder = asyncWrapper (async (req, res, next)=>{
 
@@ -144,7 +147,7 @@ const updateOrder = asyncWrapper (async (req, res, next)=>{
             return next(error);
         }
 
-        await paymentService.releaseFunds(order.buyer, order.seller, order.price);
+        await paymentService.releaseFunds(order.buyer, order.seller, order.price, order._id);
     }
     
     else if (orderStatus === "in progress") {
@@ -168,7 +171,7 @@ const updateOrder = asyncWrapper (async (req, res, next)=>{
             return next(error);
         }
 
-        await paymentService.refundFunds(order.buyer, order.price);
+        await paymentService.refundFunds(order.buyer, order.price, order._id);
     }
 
     const updatedOrder = await Order.findByIdAndUpdate(
@@ -180,6 +183,7 @@ const updateOrder = asyncWrapper (async (req, res, next)=>{
     res.json({status: statusText.SUCCESS, data: {updatedOrder}});
 
 });
+
 
 const deleteOrder = asyncWrapper (async (req, res, next)=>{
 

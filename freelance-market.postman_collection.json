@@ -700,6 +700,68 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "wallet",
+      "item": [
+        {
+          "name": "deposit",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/wallet/deposit",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "wallet",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "withdraw",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/wallet/deposit",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "wallet",
+                "deposit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "transaction-history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/wallet/history",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "wallet",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

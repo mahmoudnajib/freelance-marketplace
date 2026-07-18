@@ -31,17 +31,20 @@ app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
-const usersRoutes = require('./routes/user.routes');
-app.use('/api/users', usersRoutes);
+const usersRouter = require('./routes/user.routes');
+app.use('/api/users', usersRouter);
 
-const serviceRoutes = require('./routes/service.routes');
-app.use('/api/services', serviceRoutes);
+const serviceRouter = require('./routes/service.routes');
+app.use('/api/services', serviceRouter);
 
-const orderRoutes = require('./routes/order.routes');
-app.use('/api/orders', orderRoutes);
+const orderRouter = require('./routes/order.routes');
+app.use('/api/orders', orderRouter);
 
-const reviewRoutes = require('./routes/review.routes');
-app.use('/api/reviews', reviewRoutes);
+const reviewRouter = require('./routes/review.routes');
+app.use('/api/reviews', reviewRouter);
+
+const walletRouter = require('./routes/wallet.routes');
+app.use('/api/wallet', walletRouter);
 
 
 const swaggerUi = require('swagger-ui-express');
