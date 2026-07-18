@@ -5,13 +5,12 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 
-
 const url = process.env.DATABASE_URL;
 const port = process.env.PORT || 4000;
 
 const statusText = require('./utils/statusText');
 const appError = require('./utils/appError');
-
+const walletController = require('./controllers/wallet.controller'); 
 
 mongoose.connect(url)
 .then(()=>{
@@ -24,9 +23,11 @@ mongoose.connect(url)
         console.error("Database connection failed", err.message);
     });
 
-app.use(express.json());
-
 app.use(cors());
+
+app.post('/api/wallet/webhook', express.raw({ type: 'application/json' }), walletController.stripeWebhook);
+
+app.use(express.json());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -74,7 +75,3 @@ app.use((error, req, res, next)=>{
         message: error.message || "Internal Server Error"
     });
 });
-
-
-
-
