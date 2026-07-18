@@ -1,49 +1,48 @@
-### Freelance Marketplace API
-A robust, secure, and fully-featured RESTful API for a Freelance Marketplace platform built with the Node.js ecosystem. The project follows the MVC architecture and implements professional industry best practices including strict validation, global error handling, and secure role-based authentication.
+# 🚀 Freelance Marketplace API
 
+A robust, secure, and fully-featured RESTful API for a Freelance Marketplace platform built with the Node.js ecosystem. This project strictly follows the **MVC (Model-View-Controller)** architecture and implements industry-standard best practices, including role-based access control, secure transaction tracking, and integrated third-party payment gateways.
 
-🚀 Tech Stack
+---
 
-Backend: Node.js, Express.js
-  Database: MongoDB with Mongoose ODM
-    Authentication: JSON Web Tokens (JWT)
-      Validation: Joi (Schema-based request validation)
-      File Uploads: Multer
-    Payments: Stripe API SDK & Webhooks Integration
-  API Documentation: Swagger UI & OpenAPI 3.0
-Security & Utilities: Cors, Dotenv, Bcrypt, Yaml
+## 🛠️ Tech Stack
 
-🌟 Key Features
-Based on the implemented services and modules, the API provides:
+| Layer | Technologies |
+| :--- | :--- |
+| **Backend Runtime** | Node.js, Express.js |
+| **Database & ODM** | MongoDB, Mongoose |
+| **Authentication** | JSON Web Tokens (JWT), Bcrypt |
+| **Data Validation** | Joi (Schema-based request validation) |
+| **Payment Gateway** | Stripe API SDK & Webhooks Integration |
+| **File Management** | Multer Middleware |
+| **API Docs & Tools** | Swagger UI, OpenAPI 3.0, Postman |
 
-- Role-Based Access Control: Secure routes and specific permissions for different user roles (buyer, seller, admin).
+---
 
-- Internal Wallet Ecosystem: A fully implemented local wallet service handling secure deposits, seller withdrawals, and granular tracking.
+## 🌟 Key Features
 
-- Stripe Global Payments: Seamless credit card integration via Stripe Checkout Sessions, paired with automated and secure Stripe Webhooks to instantly capture and verify real funding events.
+*   **🔐 Role-Based Access Control (RBAC):** Secure routes with specialized permissions dynamically tailored for **Buyers**, **Sellers**, and **Admins**.
+*   **💼 Internal Wallet Ecosystem:** A fully automated internal wallet service handling secure account deposits, freelance service payments, seller withdrawals, and ledger transaction tracking.
+*   **💳 Stripe Global Payments:** Seamless credit card processing via Stripe Checkout Sessions, paired with secure **Stripe Webhooks** to instantly capture and verify real-time funding events.
+*   **📂 Advanced File Uploads:** Configured Multer filters for secure, isolated uploading of user avatars and project attachments.
+*   **📝 Automated Documentation:** Interactive Swagger interface generated via a custom automation script (`convert.js`) that parses Postman collections straight into valid OpenAPI 3.0 schemas.
+*   **🌱 Database Seeding:** Ready-to-use seed script (`seed.js`) to quickly populate MongoDB with mock data for instant testing.
 
-- Profile Management: Secure user profile updates, handling personal data and avatars.
+---
 
-- Advanced File Uploading: Configured middlewares for secure file uploads using Multer.
+## 📂 Project Structure
 
-- Database Seeding: Automated script (seed.js) to quickly populate the database with initial testing data.
-
-
-📂 Project Structure
-
-├── controllers/      # Request handlers & business logic (User, Service, Order, Review, Wallet)
-├── middlewares/      # Authentication, role gates, file uploads & error boundary
-├── models/           # Mongoose schemas & data definitions (User, Service, Order, Review, Transaction)
-├── routes/           # Routing layer split by domain modules
-├── services/         # Core internal services (Wallet operations & Stripe processing layer)
-├── utils/            # Shared helper functions, custom appError wrappers & constants
-├── validators/       # Joi schema validation objects
-├── view/             # Static frontend files (Landing Page)
-├── uploads/          # Directory for locally uploaded user files
-├── swagger.json      # OpenAPI documentation file
-├── convert.js        # Automation script to parse Postman collection into Swagger
-├── seed.js           # Database seeding script for initial data
-├── .env              # Local environment config (Ignored in Git)
-├── .gitignore        # Git exclusion rules
-├── server.js         # Application entry point
-└── package.json      # Project dependencies & scripts
+```text
+├── controllers/          # Request handlers & business logic (User, Service, Order, Wallet...)
+├── middlewares/          # JWT Auth, Role gates, Multer configurations & Global Error Boundary
+├── models/               # Mongoose schemas & definitions (User, Service, Order, Transaction...)
+├── routes/               # Routing layer isolated by domain modules
+├── services/             # Core internal services (Wallet operations & Stripe processing layer)
+├── validators/           # Strict Joi schema validation objects
+├── utils/                # Shared helpers, Custom AppError wrappers & Constants
+├── view/                 # Static frontend layout (Landing page placeholder)
+├── uploads/              # Local disk storage for uploaded media assets
+├── swagger.json          # OpenAPI documentation file
+├── convert.js            # Automation script to parse Postman collections into Swagger
+├── seed.js               # Database seeding script for development environment
+├── server.js             # Application bootstrap & server entry point
+└── package.json          # Project dependencies & automated scripts
