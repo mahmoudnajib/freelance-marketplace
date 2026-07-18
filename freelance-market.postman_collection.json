@@ -726,17 +726,17 @@
         {
           "name": "withdraw",
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [],
             "url": {
-              "raw": "{{base-url}}/api/wallet/deposit",
+              "raw": "{{base-url}}/api/wallet/withdraw",
               "host": [
                 "{{base-url}}"
               ],
               "path": [
                 "api",
                 "wallet",
-                "deposit"
+                "withdraw"
               ]
             }
           },
@@ -756,6 +756,39 @@
                 "api",
                 "wallet",
                 "history"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "stripe-checkout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            },
+            "url": {
+              "raw": "{{base-url}}/api/wallet/stripe-checkout",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "wallet",
+                "stripe-checkout"
               ]
             }
           },

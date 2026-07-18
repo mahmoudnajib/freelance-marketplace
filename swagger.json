@@ -22,6 +22,9 @@
     },
     {
       "name": "reviewes"
+    },
+    {
+      "name": "wallet"
     }
   ],
   "paths": {
@@ -168,7 +171,7 @@
         }
       }
     },
-    "/api/services/{id}": {
+    "/api/services/:id": {
       "get": {
         "tags": [
           "services"
@@ -255,7 +258,7 @@
         }
       }
     },
-    "/api/orders/{id}": {
+    "/api/orders/:id": {
       "get": {
         "tags": [
           "orders"
@@ -349,7 +352,7 @@
         }
       }
     },
-    "/api/reviews/{id}": {
+    "/api/reviews/:id": {
       "get": {
         "tags": [
           "reviewes"
@@ -386,6 +389,79 @@
           "reviewes"
         ],
         "summary": "delete-review",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/wallet/deposit": {
+      "post": {
+        "tags": [
+          "wallet"
+        ],
+        "summary": "deposit",
+        "requestBody": {
+          "content": {}
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/wallet/withdraw": {
+      "post": {
+        "tags": [
+          "wallet"
+        ],
+        "summary": "withdraw",
+        "requestBody": {
+          "content": {}
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/wallet/history": {
+      "get": {
+        "tags": [
+          "wallet"
+        ],
+        "summary": "transaction-history",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/wallet/stripe-checkout": {
+      "post": {
+        "tags": [
+          "wallet"
+        ],
+        "summary": "stripe-checkout",
+        "requestBody": {
+          "content": {}
+        },
         "responses": {
           "200": {
             "description": "Successful response",
